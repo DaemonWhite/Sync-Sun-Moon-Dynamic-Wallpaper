@@ -82,6 +82,7 @@ export default class QuickSettingsExampleExtension extends Extension {
         this._indicator.quickSettingsItems.forEach(item => item.destroy());
         this._indicator.destroy();
         this._settings = null;
+        this._timer.disable();
         this._timer = null;
         message('Disabled');
 

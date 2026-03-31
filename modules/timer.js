@@ -1,53 +1,92 @@
 import Geoclue from 'gi://Geoclue';
 import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
+import GLib from 'gi://GLib';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
 import { gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 
-// Use GObject.registerClass to wrap the class
-export const Timer = GObject.registerClass(
-    {
-        GTypeName: 'SunMoonDynamicTimer', 
-    },
-    class Timer extends GObject.Object {
-        #geoclue = null;
-        #cancellable = null;
+import { message, messageError } from '../debug.js';
 
-        constructor() {
-            super();
-            console.debug("Système de timer initialisé");
-        }
 
-        enable() {
-            this.#cancellable = new Gio.Cancellable();
-            
-            console.log("world");
-            
-            Geoclue.Simple.new(
-                'org.gnome.Shell',
-                Geoclue.AccuracyLevel.CITY,
-                this.#cancellable,
-                (obj, res) => {
-                    try {
-                        this.#geoclue = Geoclue.Simple.new_finish(res);
-                        this.#onGeoclueReady();
-                    } catch (error) {
-                        console.error("Erreur lors de l'initialisation de GeoClue:", error);
-                    }
+export class Timer extends GObject.Object {
+    #geoclue = null;
+    #cancellable = null;
+    #timeoutId = null;
+
+    static {
+        GObject.registerClass({}, this);
+    }
+
+    constructor() {
+        super();
+    }
+
+    enable() {
+        this.#cancellable = new Gio.Cancellable();
+
+
+        message('Stating GeoClue');
+
+        this.#timeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 10, () => {
+            messageError('Geoclue timeout: service took too long to respond.');
+            this._abortGeoclue();
+            return GLib.SOURCE_REMOVE;
+        });
+
+        Geoclue.Simple.new(
+            'org.gnome.shell.extensions.SunMoonDynamic',
+            Geoclue.AccuracyLevel.CITY,
+            this.#cancellable,
+            (source, result) => {
+                if (this.#timeoutId > 0) {
+                    GLib.Source.remove(this.#timeoutId);
+                    this.#timeoutId = 0;
                 }
-            );
-        }
+                this.#onGeoclueReady(source, result);
+            }
+        );
 
-        #onGeoclueReady() {
-            console.log("Geoclue prêt");
+        message('Timer started');
+
+    }
+
+    _abortGeoclue() {
+        if (this.#cancellable) {
+            this.#cancellable.cancel();
+            this.#cancellable = null;
+        }
+        this.#timeoutId = null;
+    }
+
+    disable() {
+        this._abortGeoclue();
+        if (this.#geoclue) {
+            this.#geoclue = null
+        }
+        message('Timer killed');
+    }
+
+    #onGeoclueReady(_source, result) {
+        try {
+
+            this.#geoclue = Geoclue.Simple.new_finish(result);
+
             const location = this.#geoclue.get_location();
-            Main.notify(
-              'Simple Notification', 
-              `Latitude: ${location.latitude}, Longitude: ${location.longitude}`
-            );
+            const msg = `Connected to geoclue. Lat: ${location.latitude}, Lon: ${location.longitude}`;
+            message(msg);
+
+            Main.notify('SunMoonDynamic Position', msg);
+
+            this.#geoclue.connect('notify::location', () => {
+                message('Location changed!');
+            });
+
+        } catch (e) {
+            messageError('Failed to connect to Geoclue: ' + e.message);
+            Main.notify('SunMoonDynamic Failled', 'Impossible to detected localisation, Enable WiFi or GPS and authorised location in Gnome Settings');
         }
     }
-);
+
+}
