@@ -67,13 +67,14 @@ class ExampleIndicator extends SystemIndicator {
 
 export default class QuickSettingsExampleExtension extends Extension {
     enable() {
+        globalThis.SND = this;
         message('Enabling...');
         this._timer = new Timer();
         this._timer.enable();
         this._settings = this.getSettings('org.gnome.shell.extensions.SunMoonDynamic');
         this._indicator = new ExampleIndicator(this._settings);
         Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
-        message('Disabled');
+        message('Enabled');
     }
 
     disable() {
@@ -83,5 +84,7 @@ export default class QuickSettingsExampleExtension extends Extension {
         this._settings = null;
         this._timer = null;
         message('Disabled');
+
+        delete globalThis.SND
     }
 }

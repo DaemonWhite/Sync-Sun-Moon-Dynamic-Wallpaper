@@ -4,13 +4,13 @@
  * @param {string} msg Message to print.
  */
 export function message(msg) {
-  console.log(` ${NTS.metadata['uuid']} => ${msg} `);
+  console.log(` ${SND.metadata['uuid']} => ${msg} `);
 }
 
 export function messageWarning(msg) {
-  console.warn(` ${NTS.metadata['uuid']} => ${msg} `);
+  console.warn(` ${SND.metadata['uuid']} => ${msg} `);
 }
 
 export function messageError(msg) {
-  console.error(` ${NTS.metadata['uuid']} => ${msg} `);
+  console.error(` ${SND.metadata['uuid']} => ${msg} `);
 }
