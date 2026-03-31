@@ -1,0 +1,10 @@
+{
+  "name": "Sync Sun Moon Dynamic Wallpaper",
+  "description": "Extensions that synchronize dynamic themes with the sun's position",
+  "uuid": "SunMoonDynamic.DaemonWhite.fr",
+  "shell-version": [
+    "49"
+  ],
+  "gettext-domain": "SunMoonDynamic.DaemonWhite.fr",
+  "settings-schema": "org.gnome.shell.extensions.SunMoonDynamic"
+}
