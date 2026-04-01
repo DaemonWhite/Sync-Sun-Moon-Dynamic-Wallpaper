@@ -26,7 +26,7 @@ import {QuickToggle, SystemIndicator} from 'resource:///org/gnome/shell/ui/quick
 
 
 import { Timer } from './modules/timer.js';
-import { message } from './debug.js'
+import { Debug } from './debug.js'
 
 const ExampleToggle = GObject.registerClass(
 class ExampleToggle extends QuickToggle {
@@ -67,25 +67,23 @@ class ExampleIndicator extends SystemIndicator {
 
 export default class QuickSettingsExampleExtension extends Extension {
     enable() {
-        globalThis.SND = this;
-        message('Enabling...');
+        Debug.setUUID(this.metadata['uuid']);
+        Debug.message('Enabling...');
         this._timer = new Timer();
         this._timer.enable();
         this._settings = this.getSettings('org.gnome.shell.extensions.SunMoonDynamic');
         this._indicator = new ExampleIndicator(this._settings);
         Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
-        message('Enabled');
+        Debug.message('Enabled');
     }
 
     disable() {
-        message('Disabling...');
+        Debug.message('Disabling...');
         this._indicator.quickSettingsItems.forEach(item => item.destroy());
         this._indicator.destroy();
         this._settings = null;
         this._timer.disable();
         this._timer = null;
-        message('Disabled');
-
-        delete globalThis.SND
+        Debug.message('Disabled');
     }
 }

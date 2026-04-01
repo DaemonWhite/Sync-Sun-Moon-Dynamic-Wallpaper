@@ -7,7 +7,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import { gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 
-import { message, messageError } from '../debug.js';
+import { Debug } from '../debug.js';
 
 
 export class Timer extends GObject.Object {
@@ -27,10 +27,10 @@ export class Timer extends GObject.Object {
         this.#cancellable = new Gio.Cancellable();
 
 
-        message('Stating GeoClue');
+        Debug.message('Stating GeoClue');
 
         this.#timeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 10, () => {
-            messageError('Geoclue timeout: service took too long to respond.');
+            Debug.messageError('Geoclue timeout: service took too long to respond.');
             this._abortGeoclue();
             return GLib.SOURCE_REMOVE;
         });
@@ -48,7 +48,7 @@ export class Timer extends GObject.Object {
             }
         );
 
-        message('Timer started');
+        Debug.message('Timer started');
 
     }
 
@@ -65,7 +65,7 @@ export class Timer extends GObject.Object {
         if (this.#geoclue) {
             this.#geoclue = null
         }
-        message('Timer killed');
+        Debug.message('Timer killed');
     }
 
     #onGeoclueReady(_source, result) {
@@ -75,16 +75,16 @@ export class Timer extends GObject.Object {
 
             const location = this.#geoclue.get_location();
             const msg = `Connected to geoclue. Lat: ${location.latitude}, Lon: ${location.longitude}`;
-            message(msg);
+            Debug.message(msg);
 
             Main.notify('SunMoonDynamic Position', msg);
 
             this.#geoclue.connect('notify::location', () => {
-                message('Location changed!');
+                Debug.message('Location changed!');
             });
 
         } catch (e) {
-            messageError('Failed to connect to Geoclue: ' + e.message);
+            Debug.messageError('Failed to connect to Geoclue: ' + e.Debug.message);
             Main.notify('SunMoonDynamic Failled', 'Impossible to detected localisation, Enable WiFi or GPS and authorised location in Gnome Settings');
         }
     }
