@@ -37,7 +37,7 @@ export class Timer extends GObject.Object {
 
         Geoclue.Simple.new(
             'org.gnome.shell.extensions.SunMoonDynamic',
-            Geoclue.AccuracyLevel.CITY,
+            Geoclue.AccuracyLevel.EXACT,
             this.#cancellable,
             (source, result) => {
                 if (this.#timeoutId > 0) {
@@ -81,6 +81,8 @@ export class Timer extends GObject.Object {
 
             this.#geoclue.connect('notify::location', () => {
                 Debug.message('Location changed!');
+                const msg = `Connected to geoclue. Lat: ${location.latitude}, Lon: ${location.longitude}`;
+                Debug.message(msg);
             });
 
         } catch (e) {
