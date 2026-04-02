@@ -1,25 +1,25 @@
 import Gio from 'gi://Gio';
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
-import Geoclue from 'gi://Geoclue';
+
+import { buildDynamicImageByXmlFile } from './modules/imageDynamic.js';
+import { getBackgroundProperties } from './modules/utils.js';
+import { Debug } from './debug.js';
 
 import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 
 export default class ExamplePreferences extends ExtensionPreferences {
-    fillPreferencesWindow(window) {
-        // Create a preferences page, with a single group
+
+    #window = null;
+    #listDynamicImage = [];
+
+    #buildMainPage() {
         const page = new Adw.PreferencesPage({
             title: _('General'),
             icon_name: 'dialog-information-symbolic',
         });
         
-        const label = new Gtk.label(
-          {label: location}
-        );
-        window.add(label);
-        window.add(page);
-
         const group = new Adw.PreferencesGroup({
             title: _('Appearance'),
             description: _('Configure the appearance of the extension'),
@@ -37,5 +37,43 @@ export default class ExamplePreferences extends ExtensionPreferences {
         window._settings = this.getSettings();
         window._settings.bind('show-indicator', row, 'active',
             Gio.SettingsBindFlags.DEFAULT);
+
+        this.#window.add(page);
+    }
+
+    #buildPicturePage() {
+        const page = new Adw.PreferencesPage({
+            title: _('picturePage'),
+            icon_name: 'dialog-information-symbolic',
+        });
+
+        this.#window.add(page)
+    }
+
+    fillPreferencesWindow(window) {
+        this.#window = window;
+        Debug.setUUID(this.metadata['uuid']);
+        const pathImages = getBackgroundProperties();
+
+        Debug.message(`list images detected :  ${pathImages}`);
+
+        for (let pathImage of pathImages) {
+            const images = buildDynamicImageByXmlFile(pathImage);
+            for (let dynamicImage of images) {
+                Debug.message(dynamicImage.wallpaper.name);
+                this.#listDynamicImage.push(dynamicImage);
+            }
+        }
+
+        Debug.message(`DynamicImage loaded : ${this.#listDynamicImage}`);
+
+
+        /* BUILD PAGE */
+
+        this.#buildMainPage();
+        this.#buildPicturePage();
+
+
     }
 }
+

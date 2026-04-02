@@ -1,5 +1,5 @@
 import Gio from 'gi://Gio';
-
+import { Debug } from '../debug.js';
 
 export class ImageStep {
     constructor(duration, imagePath) {
@@ -42,7 +42,26 @@ export class WallpaperInfo {
 
 TODO Pour l'instant ça fera le taf
 */
-export function buildDynamicImageByXmlFile(xmlWallpaper) {
+export function buildDynamicImageByXmlFile(xmlPath) {
+    Debug.message(`start load xmlProperties file : ${xmlPath}`);
+
+    let xmlWallpaper = [];
+
+    try {
+        const file = Gio.File.new_for_path(xmlPath);
+        const [success, contents] = file.load_contents(null);
+        if (success) {
+            xmlWallpaper = new TextDecoder().decode(contents);
+        }
+        Debug.message('xmlProperties loaded');
+    } catch (e) {
+        Debug.messageError(`xmlProperties not loaded ${e}`);
+    }
+
+    if (!xmlWallpaper) {
+        return false;
+    }
+
     const dynamicImages = [];
 
     let wallpapers = [];
@@ -56,7 +75,7 @@ export function buildDynamicImageByXmlFile(xmlWallpaper) {
         let filename = block.match(/<filename>(.*?)<\/filename>/)?.[1];
         let options = block.match(/<options>(.*?)<\/options>/)?.[1];
 
-        wallpapers.push( new WallpaperInfo( nameWallpaper, filename, options ))
+        wallpapers.push(new WallpaperInfo(nameWallpaper, filename, options));
     }
 
     match = null;
@@ -67,21 +86,21 @@ export function buildDynamicImageByXmlFile(xmlWallpaper) {
         const dynamicImage = new DynamicImage(wallpaper);
         let xmlDynamicWallpaper = null;
         const file = Gio.File.new_for_path(wallpaper.filename);
+        Debug.message(`Load ${wallpaper.name} => ${wallpaper.filename}`);
         try {
             const [success, contents] = file.load_contents(null);
             if (success) {
                 xmlDynamicWallpaper = new TextDecoder().decode(contents);
             }
+            Debug.message(`Loaded ${wallpaper.name} => ${wallpaper.filename}`);
         } catch (e) {
-            console.log(e)
+            Debug.messageError(`not Loaded ${wallpaper.name} => ${wallpaper.filename}`);
             continue;
         }
 
         if (!xmlDynamicWallpaper) {
-            continue
+            continue;
         }
-
-
 
         let match;
 
@@ -101,7 +120,6 @@ export function buildDynamicImageByXmlFile(xmlWallpaper) {
         }
         dynamicImages.push(dynamicImage);
     }
-
 
     return dynamicImages;
 }
