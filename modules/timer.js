@@ -81,12 +81,15 @@ export class Timer extends GObject.Object {
 
             this.#geoclue.connect('notify::location', () => {
                 Debug.message('Location changed!');
-                const msg = `Connected to geoclue. Lat: ${location.latitude}, Lon: ${location.longitude}`;
+
+                const newLocation = this.#geoclue.get_location();
+                const msg = `Location updated. Lat: ${newLocation.latitude}, Lon: ${newLocation.longitude}`;
                 Debug.message(msg);
+                Main.notify('SunMoonDynamic Update Position', msg);
             });
 
         } catch (e) {
-            Debug.messageError('Failed to connect to Geoclue: ' + e.Debug.message);
+            Debug.messageError('Failed to connect to Geoclue: ' + e);
             Main.notify('SunMoonDynamic Failled', 'Impossible to detected localisation, Enable WiFi or GPS and authorised location in Gnome Settings');
         }
     }
